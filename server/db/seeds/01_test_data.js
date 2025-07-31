@@ -32,32 +32,42 @@ exports.seed = async function(knex) {
   await knex('messages').insert([
     {
       user_id: '123456789012345678',
-      message: '안녕하세요! 첫 번째 테스트 메시지입니다.',
-      attachment_url: null,
+      guild_id: '111111111111111111',
+      channel_id: '222222222222222222',
+      content: '안녕하세요! 첫 번째 테스트 메시지입니다.',
+      attachments: JSON.stringify([]),
       created_at: knex.fn.now()
     },
     {
       user_id: '123456789012345679',
-      message: '이것은 두 번째 메시지입니다.',
-      attachment_url: null,
+      guild_id: '111111111111111111',
+      channel_id: '222222222222222222',
+      content: '이것은 두 번째 메시지입니다.',
+      attachments: JSON.stringify([]),
       created_at: knex.fn.now()
     },
     {
       user_id: '123456789012345680',
-      message: '첨부파일이 있는 메시지입니다.',
-      attachment_url: 'https://cdn.discordapp.com/attachments/123456789/123456789/test_image.png',
+      guild_id: '111111111111111111',
+      channel_id: '222222222222222222',
+      content: '첨부파일이 있는 메시지입니다.',
+      attachments: JSON.stringify(['https://cdn.discordapp.com/attachments/123456789/123456789/test_image.png']),
       created_at: knex.fn.now()
     },
     {
       user_id: '123456789012345678',
-      message: null,
-      attachment_url: 'https://cdn.discordapp.com/attachments/123456789/123456790/another_image.jpg',
+      guild_id: '111111111111111111',
+      channel_id: '333333333333333333',
+      content: null,
+      attachments: JSON.stringify(['https://cdn.discordapp.com/attachments/123456789/123456790/another_image.jpg']),
       created_at: knex.fn.now()
     },
     {
       user_id: '123456789012345679',
-      message: '오늘 날씨가 정말 좋네요! 🌞',
-      attachment_url: null,
+      guild_id: '111111111111111111',
+      channel_id: '333333333333333333',
+      content: '오늘 날씨가 정말 좋네요! 🌞',
+      attachments: JSON.stringify([]),
       created_at: knex.fn.now()
     }
   ]);
