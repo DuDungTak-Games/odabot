@@ -1,0 +1,35 @@
+{
+  "name": "oda-bot",
+  "version": "1.0.0",
+  "description": "Discord Bot + Express API + React Frontend",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev:server": "nodemon server/index.js",
+    "dev:bot": "nodemon bot/index.js",
+    "dev:all": "concurrently \"npm run dev:server\" \"npm run dev:bot\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm start",
+    "migrate:latest": "cd server && npx knex migrate:latest",
+    "migrate:rollback": "cd server && npx knex migrate:rollback",
+    "seed:run": "cd server && npx knex seed:run",
+    "client:install": "cd client && npm install",
+    "client:build": "cd client && npm run build",
+    "setup": "npm install && npm run client:install"
+  },
+  "keywords": ["discord", "bot", "express", "mysql", "react"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "express": "^4.18.2",
+    "mysql2": "^3.6.5",
+    "knex": "^3.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "concurrently": "^8.2.2"
+  }
+}
