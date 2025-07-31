@@ -9,6 +9,8 @@ const randomRouter = require('./routes/random');
 const statsRouter = require('./routes/stats');
 const messagesRouter = require('./routes/messages');
 const channelsRouter = require('./routes/channels');
+const usersRouter = require('./routes/users');
+const leaderboardRouter = require('./routes/leaderboard');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -46,6 +48,8 @@ app.use('/api/random', randomRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/channels', channelsRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/leaderboard', leaderboardRouter);
 
 // 기본 라우트
 app.get('/', (req, res) => {
