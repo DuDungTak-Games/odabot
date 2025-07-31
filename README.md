@@ -1,28 +1,33 @@
 # 🤖 ODA Bot
 
-Node.js + Express + MySQL + Discord.js + React 기반의 Discord 봇 프로젝트
+Node.js + Express + MySQL + Discord.js + React 기반의 향상된 Discord 봇 프로젝트
 
 ## 📂 프로젝트 구조
 
 ```
 oda-bot/
 ├── bot/                # 디스코드 봇 코드
-│   ├── index.js        # 디스코드 봇 진입점
-│   ├── commands/       # slash command 용 (미래 확장)
-│   └── events/         # 이벤트 핸들러 (미래 확장)
+│   ├── index.js        # 디스코드 봇 진입점 (슬래시 커맨드 지원)
+│   ├── commands/       # 슬래시 커맨드 파일들
+│   ├── events/         # 이벤트 핸들러 파일들  
+│   └── utils/
+│       └── channels.js # 채널 관리 유틸리티
 ├── server/             # Express API 서버
 │   ├── index.js        # Express 서버 진입점
 │   ├── db.js           # MySQL 연결 설정
 │   ├── routes/         # API 라우터
 │   │   ├── timeline.js # 타임라인 API
 │   │   ├── random.js   # 랜덤 메시지 API
-│   │   └── stats.js    # 통계 API
+│   │   ├── stats.js    # 통계 API
+│   │   ├── messages.js # 메시지 저장 API
+│   │   └── channels.js # 채널 관리 API
 │   └── db/
 │       ├── knexfile.js      # knex 환경 설정
 │       ├── migrations/      # 마이그레이션 파일들
 │       ├── seeds/           # 초기 데이터
 │       └── schema.sql       # 스키마 전체 덤프
 ├── client/             # React 프론트엔드
+├── channels.json       # 등록된 채널 정보 (자동 생성)
 ├── .env.example        # 환경변수 예시
 ├── package.json        # 프로젝트 의존성
 └── README.md           # 이 파일
@@ -106,6 +111,40 @@ npm start
 node bot/index.js
 ```
 
+## ✨ 업데이트된 주요 변경사항
+
+### 🔧 Discord Bot 개선사항
+
+1. **슬래시 커맨드 시스템**
+   - 모듈식 명령어 구조로 확장성 향상
+   - 자동 명령어 등록 및 로딩
+   - 에러 처리 개선
+
+2. **채널 관리 시스템**
+   - `channels.json` 파일로 등록된 채널 관리
+   - 채널별 메시지 수집 제어 가능
+   - API를 통한 채널 추가/제거
+
+### 🚀 API 서버 확장
+
+1. **새로운 엔드포인트**
+   - `/api/messages` - 메시지 저장 API
+   - `/api/channels` - 채널 관리 API
+
+2. **향상된 데이터 구조**
+   - `guild_id`, `channel_id` 필드 추가
+   - JSON 형태의 첨부파일 배열 지원
+   - 더 정확한 메시지 메타데이터
+
+### 📊 데이터베이스 스키마 업데이트
+
+메시지 테이블에 새로운 필드들이 추가되었습니다:
+- `guild_id`: Discord 서버 식별자
+- `channel_id`: Discord 채널 식별자  
+- `attachments`: JSON 배열로 다중 첨부파일 지원
+
+이제 메시지의 출처를 더 정확하게 추적할 수 있습니다.
+
 ## 🔧 환경변수 설정
 
 `.env` 파일에 다음 값들을 설정하세요:
@@ -126,13 +165,17 @@ DB_NAME=odabot
 PORT=3001
 NODE_ENV=development
 
-# CORS 설정
+# CORS 설정 (프론트엔드 주소)
 FRONTEND_URL=http://localhost:3000
+
+# API 기본 주소 (Discord 봇과 클라이언트에서 사용)
+API_BASE_URL=http://localhost:3001/api
 ```
 
 ## 📊 데이터베이스 스키마
 
 ### users 테이블
+
 ```sql
 CREATE TABLE users (
     id BIGINT PRIMARY KEY COMMENT 'Discord 사용자 ID',
@@ -144,12 +187,15 @@ CREATE TABLE users (
 ```
 
 ### messages 테이블
+
 ```sql
 CREATE TABLE messages (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '메시지 고유 ID',
     user_id BIGINT NOT NULL COMMENT 'Discord 사용자 ID',
-    message TEXT COMMENT '메시지 내용',
-    attachment_url VARCHAR(500) COMMENT 'Discord CDN 첨부파일 URL',
+    guild_id BIGINT COMMENT 'Discord 서버 ID',
+    channel_id BIGINT COMMENT 'Discord 채널 ID',
+    content TEXT COMMENT '메시지 내용',
+    attachments JSON COMMENT '첨부파일 URL 배열 (JSON 형태)',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -181,52 +227,72 @@ npm run client:build       # React 앱 빌드
 ## 📡 API 엔드포인트
 
 ### 타임라인 API
+
 - `GET /api/timeline` - 최신 메시지 목록
 - `GET /api/timeline/user/:userId` - 특정 사용자 메시지
 - `GET /api/timeline/search?q=검색어` - 메시지 검색
 
 ### 랜덤 API
+
 - `GET /api/random?count=5` - 랜덤 메시지
 - `GET /api/random/user/:userId` - 특정 사용자 랜덤 메시지
 - `GET /api/random/images` - 이미지가 있는 랜덤 메시지
 - `GET /api/random/texts` - 텍스트만 있는 랜덤 메시지
 
 ### 통계 API
+
 - `GET /api/stats` - 전체 통계
 - `GET /api/stats/users` - 사용자별 통계
 - `GET /api/stats/daily` - 일별 메시지 통계
 - `GET /api/stats/hourly` - 시간대별 통계
 - `GET /api/stats/user/:userId` - 특정 사용자 상세 통계
 
+### 메시지 API
+
+- `POST /api/messages` - 메시지 저장 (봇에서 사용)
+
+### 채널 관리 API
+
+- `GET /api/channels` - 등록된 채널 목록 조회
+- `DELETE /api/channels/:id` - 특정 채널 제거
+
 ### 시스템 API
+
 - `GET /` - API 정보
 - `GET /health` - 서버 및 DB 상태 확인
 
 ## 🎯 주요 기능
 
 ### Discord Bot
-- 실시간 메시지 수집 및 저장
-- 텍스트 메시지와 첨부파일 구분 처리
-- Discord CDN URL을 통한 이미지 보존
-- 사용자 정보 자동 업데이트
+
+- **슬래시 커맨드 지원** - 모듈식 명령어 시스템
+- **이벤트 핸들러** - 확장 가능한 이벤트 처리
+- **채널 관리** - JSON 파일 기반 채널 등록/해제
+- **메시지 수집** - 실시간 메시지 데이터베이스 저장
+- **첨부파일 처리** - JSON 배열 형태로 다중 첨부파일 지원
 
 ### Express API
-- RESTful API 설계
-- CORS 설정으로 프론트엔드 연동
-- MySQL 연결 풀 사용
-- 에러 처리 및 로깅
+
+- **RESTful API 설계** - 표준화된 REST 엔드포인트
+- **CORS 허용** - 프론트엔드 연동 지원
+- **MySQL 연결 풀** - 효율적인 데이터베이스 연결 관리
+- **에러 처리 및 로깅** - 체계적인 오류 관리
+- **새로운 API** - 메시지 저장 및 채널 관리 기능
 
 ### React Dashboard
-- 실시간 메시지 타임라인
-- 랜덤 메시지 조회
-- 상세 통계 대시보드
-- 반응형 디자인
+
+- **실시간 메시지 타임라인** - 최신 메시지 표시
+- **랜덤 메시지 조회** - 다양한 조건의 랜덤 메시지
+- **상세 통계 대시보드** - 종합적인 데이터 분석
+- **반응형 디자인** - 모바일 친화적 UI
 
 ### 데이터베이스
-- Knex.js 마이그레이션 시스템
-- 인덱스 최적화
-- 외래키 제약조건
-- UTF8MB4 지원 (이모지 포함)
+
+- **Knex.js 마이그레이션** - 체계적인 스키마 관리
+- **인덱스 최적화** - 쿼리 성능 향상
+- **외래키 제약조건** - 데이터 무결성 보장
+- **JSON 필드 지원** - 첨부파일 배열 저장
+- **UTF8MB4 지원** - 이모지 및 특수문자 완벽 지원
 
 ## 🌐 서버 배포
 
