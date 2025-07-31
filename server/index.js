@@ -61,7 +61,9 @@ app.get('/', (req, res) => {
             '/api/random',
             '/api/stats',
             '/api/messages',
-            '/api/channels'
+            '/api/channels',
+            '/api/users',
+            '/api/leaderboard'
         ]
     });
 });

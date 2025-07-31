@@ -16,11 +16,13 @@ oda-bot/
 │   ├── index.js        # Express 서버 진입점
 │   ├── db.js           # MySQL 연결 설정
 │   ├── routes/         # API 라우터
-│   │   ├── timeline.js # 타임라인 API
-│   │   ├── random.js   # 랜덤 메시지 API
-│   │   ├── stats.js    # 통계 API
-│   │   ├── messages.js # 메시지 저장 API
-│   │   └── channels.js # 채널 관리 API
+│   │   ├── timeline.js    # 타임라인 API
+│   │   ├── random.js      # 랜덤 메시지 API
+│   │   ├── stats.js       # 통계 API
+│   │   ├── messages.js    # 메시지 저장 API
+│   │   ├── channels.js    # 채널 관리 API
+│   │   ├── users.js       # 사용자 정보 API
+│   │   └── leaderboard.js # 리더보드 API
 │   └── db/
 │       ├── knexfile.js      # knex 환경 설정
 │       ├── migrations/      # 마이그레이션 파일들
@@ -130,20 +132,28 @@ node bot/index.js
 1. **새로운 엔드포인트**
    - `/api/messages` - 메시지 저장 API
    - `/api/channels` - 채널 관리 API
+   - `/api/users` - 사용자 정보 API (소셜 크레딧 조회)
+   - `/api/leaderboard` - 소셜 크레딧 리더보드 API
 
 2. **향상된 데이터 구조**
    - `guild_id`, `channel_id` 필드 추가
    - JSON 형태의 첨부파일 배열 지원
+   - `social_credit` 필드로 사용자 점수 시스템 추가
    - 더 정확한 메시지 메타데이터
 
 ### 📊 데이터베이스 스키마 업데이트
 
-메시지 테이블에 새로운 필드들이 추가되었습니다:
+**메시지 테이블 개선:**
+
 - `guild_id`: Discord 서버 식별자
 - `channel_id`: Discord 채널 식별자  
 - `attachments`: JSON 배열로 다중 첨부파일 지원
 
-이제 메시지의 출처를 더 정확하게 추적할 수 있습니다.
+**사용자 테이블 확장:**
+
+- `social_credit`: 사용자별 소셜 크레딧 점수 시스템
+
+이제 메시지의 출처를 더 정확하게 추적하고, 사용자별 점수 시스템을 통한 리더보드 기능을 제공합니다.
 
 ## 🔧 환경변수 설정
 
@@ -181,6 +191,7 @@ CREATE TABLE users (
     id BIGINT PRIMARY KEY COMMENT 'Discord 사용자 ID',
     username VARCHAR(255) NOT NULL COMMENT 'Discord 사용자명',
     avatar_url VARCHAR(500) COMMENT 'Discord 아바타 URL',
+    social_credit INT DEFAULT 0 COMMENT '소셜 크레딧 점수',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -255,6 +266,14 @@ npm run client:build       # React 앱 빌드
 
 - `GET /api/channels` - 등록된 채널 목록 조회
 - `DELETE /api/channels/:id` - 특정 채널 제거
+
+### 사용자 API
+
+- `GET /api/users/:id/credit` - 특정 사용자의 소셜 크레딧 정보 조회
+
+### 리더보드 API
+
+- `GET /api/leaderboard` - 소셜 크레딧 상위 10명 리더보드
 
 ### 시스템 API
 
