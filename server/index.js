@@ -7,6 +7,8 @@ require('dotenv').config();
 const timelineRouter = require('./routes/timeline');
 const randomRouter = require('./routes/random');
 const statsRouter = require('./routes/stats');
+const messagesRouter = require('./routes/messages');
+const channelsRouter = require('./routes/channels');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -42,6 +44,8 @@ app.use((req, res, next) => {
 app.use('/api/timeline', timelineRouter);
 app.use('/api/random', randomRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/messages', messagesRouter);
+app.use('/api/channels', channelsRouter);
 
 // 기본 라우트
 app.get('/', (req, res) => {
@@ -51,7 +55,9 @@ app.get('/', (req, res) => {
         endpoints: [
             '/api/timeline',
             '/api/random',
-            '/api/stats'
+            '/api/stats',
+            '/api/messages',
+            '/api/channels'
         ]
     });
 });
