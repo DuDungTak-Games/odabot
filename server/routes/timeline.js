@@ -11,15 +11,15 @@ router.get('/', async (req, res) => {
         const query = `
             SELECT 
                 m.id,
-                m.message,
-                m.attachment_url,
+                m.content as message,
+                m.attachments as attachment_url,
                 m.created_at,
                 u.username,
                 u.avatar_url
             FROM messages m
             INNER JOIN users u ON m.user_id = u.id
             ORDER BY m.created_at DESC
-            LIMIT ? OFFSET ?
+            LIMIT ${limit} OFFSET ${offset}
         `;
 
         const countQuery = `
@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
             INNER JOIN users u ON m.user_id = u.id
         `;
 
-        const [messages] = await req.db.execute(query, [limit, offset]);
+        const [messages] = await req.db.execute(query);
         const [countResult] = await req.db.execute(countQuery);
         
         const total = countResult[0].total;
@@ -39,10 +39,10 @@ router.get('/', async (req, res) => {
             data: {
                 messages,
                 pagination: {
-                    page,
-                    limit,
-                    total,
+                    currentPage: page,
                     totalPages,
+                    totalItems: total,
+                    limit,
                     hasNext: page < totalPages,
                     hasPrev: page > 1
                 }
@@ -50,6 +50,8 @@ router.get('/', async (req, res) => {
         });
     } catch (error) {
         console.error('타임라인 조회 오류:', error);
+        console.error('Error details:', error.message);
+        console.error('Error stack:', error.stack);
         res.status(500).json({
             success: false,
             error: '타임라인을 불러오는 중 오류가 발생했습니다.'
@@ -68,8 +70,8 @@ router.get('/user/:userId', async (req, res) => {
         const query = `
             SELECT 
                 m.id,
-                m.message,
-                m.attachment_url,
+                m.content as message,
+                m.attachments as attachment_url,
                 m.created_at,
                 u.username,
                 u.avatar_url
@@ -77,7 +79,7 @@ router.get('/user/:userId', async (req, res) => {
             INNER JOIN users u ON m.user_id = u.id
             WHERE m.user_id = ?
             ORDER BY m.created_at DESC
-            LIMIT ? OFFSET ?
+            LIMIT ${limit} OFFSET ${offset}
         `;
 
         const countQuery = `
@@ -86,7 +88,7 @@ router.get('/user/:userId', async (req, res) => {
             WHERE m.user_id = ?
         `;
 
-        const [messages] = await req.db.execute(query, [userId, limit, offset]);
+        const [messages] = await req.db.execute(query, [userId]);
         const [countResult] = await req.db.execute(countQuery, [userId]);
         
         const total = countResult[0].total;
@@ -133,26 +135,26 @@ router.get('/search', async (req, res) => {
         const query = `
             SELECT 
                 m.id,
-                m.message,
-                m.attachment_url,
+                m.content as message,
+                m.attachments as attachment_url,
                 m.created_at,
                 u.username,
                 u.avatar_url
             FROM messages m
             INNER JOIN users u ON m.user_id = u.id
-            WHERE m.message LIKE ?
+            WHERE m.content LIKE ?
             ORDER BY m.created_at DESC
-            LIMIT ? OFFSET ?
+            LIMIT ${limit} OFFSET ${offset}
         `;
 
         const countQuery = `
             SELECT COUNT(*) as total
             FROM messages m
-            WHERE m.message LIKE ?
+            WHERE m.content LIKE ?
         `;
 
         const searchPattern = `%${searchTerm}%`;
-        const [messages] = await req.db.execute(query, [searchPattern, limit, offset]);
+        const [messages] = await req.db.execute(query, [searchPattern]);
         const [countResult] = await req.db.execute(countQuery, [searchPattern]);
         
         const total = countResult[0].total;

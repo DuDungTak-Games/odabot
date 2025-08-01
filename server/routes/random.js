@@ -11,18 +11,18 @@ router.get('/', async (req, res) => {
         const query = `
             SELECT 
                 m.id,
-                m.message,
-                m.attachment_url,
+                m.content as message,
+                m.attachments as attachment_url,
                 m.created_at,
                 u.username,
                 u.avatar_url
             FROM messages m
             INNER JOIN users u ON m.user_id = u.id
             ORDER BY RAND()
-            LIMIT ?
+            LIMIT ${actualCount}
         `;
 
-        const [messages] = await req.db.execute(query, [actualCount]);
+        const [messages] = await req.db.execute(query);
 
         res.json({
             success: true,
@@ -52,8 +52,8 @@ router.get('/user/:userId', async (req, res) => {
         const query = `
             SELECT 
                 m.id,
-                m.message,
-                m.attachment_url,
+                m.content as message,
+                m.attachments as attachment_url,
                 m.created_at,
                 u.username,
                 u.avatar_url
@@ -61,10 +61,10 @@ router.get('/user/:userId', async (req, res) => {
             INNER JOIN users u ON m.user_id = u.id
             WHERE m.user_id = ?
             ORDER BY RAND()
-            LIMIT ?
+            LIMIT ${actualCount}
         `;
 
-        const [messages] = await req.db.execute(query, [userId, actualCount]);
+        const [messages] = await req.db.execute(query, [userId]);
 
         res.json({
             success: true,
@@ -94,19 +94,19 @@ router.get('/images', async (req, res) => {
         const query = `
             SELECT 
                 m.id,
-                m.message,
-                m.attachment_url,
+                m.content as message,
+                m.attachments as attachment_url,
                 m.created_at,
                 u.username,
                 u.avatar_url
             FROM messages m
             INNER JOIN users u ON m.user_id = u.id
-            WHERE m.attachment_url IS NOT NULL
+            WHERE m.attachments IS NOT NULL
             ORDER BY RAND()
-            LIMIT ?
+            LIMIT ${actualCount}
         `;
 
-        const [messages] = await req.db.execute(query, [actualCount]);
+        const [messages] = await req.db.execute(query);
 
         res.json({
             success: true,
@@ -136,19 +136,19 @@ router.get('/texts', async (req, res) => {
         const query = `
             SELECT 
                 m.id,
-                m.message,
-                m.attachment_url,
+                m.content as message,
+                m.attachments as attachment_url,
                 m.created_at,
                 u.username,
                 u.avatar_url
             FROM messages m
             INNER JOIN users u ON m.user_id = u.id
-            WHERE m.message IS NOT NULL AND m.message != ''
+            WHERE m.content IS NOT NULL AND m.content != ''
             ORDER BY RAND()
-            LIMIT ?
+            LIMIT ${actualCount}
         `;
 
-        const [messages] = await req.db.execute(query, [actualCount]);
+        const [messages] = await req.db.execute(query);
 
         res.json({
             success: true,

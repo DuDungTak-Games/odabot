@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
+// API 클라이언트 설정을 컴포넌트 외부로 이동
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+});
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -11,56 +17,50 @@ function App() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('timeline');
 
-  // API 클라이언트 설정
-  const api = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 10000,
-  });
-
   // 타임라인 메시지 조회
-  const fetchTimeline = async (page = 1, limit = 10) => {
+  const fetchTimeline = useCallback(async (page = 1, limit = 10) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get(`/timeline?page=${page}&limit=${limit}`);
+      const response = await api.get(`/api/timeline?page=${page}&limit=${limit}`);
       setMessages(response.data.data.messages || []);
     } catch (err) {
-      setError('타임라인을 불러오는데 실패했습니다: ' + err.message);
+      setError('타임라인을 불러오는데 실패했습니다: ' + (err.response?.data?.error || err.message));
       console.error('Timeline fetch error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 랜덤 메시지 조회
-  const fetchRandom = async (count = 5) => {
+  const fetchRandom = useCallback(async (count = 5) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get(`/random?count=${count}`);
+      const response = await api.get(`/api/random?count=${count}`);
       setMessages(response.data.data.messages || []);
     } catch (err) {
-      setError('랜덤 메시지를 불러오는데 실패했습니다: ' + err.message);
+      setError('랜덤 메시지를 불러오는데 실패했습니다: ' + (err.response?.data?.error || err.message));
       console.error('Random fetch error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 통계 조회
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get('/stats');
+      const response = await api.get('/api/stats');
       setStats(response.data.data || null);
     } catch (err) {
-      setError('통계를 불러오는데 실패했습니다: ' + err.message);
+      setError('통계를 불러오는데 실패했습니다: ' + (err.response?.data?.error || err.message));
       console.error('Stats fetch error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // API 연결 테스트
   const testConnection = async () => {
@@ -85,13 +85,19 @@ function App() {
     } else if (activeTab === 'stats') {
       fetchStats();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }, [activeTab, fetchTimeline, fetchRandom, fetchStats]);
 
   // 메시지 포맷팅
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString('ko-KR');
+  };
+
+  const handleImageError = (e) => {
+    // 무한 루프 방지
+    if (!e.target.src.endsWith('/default-avatar.svg')) {
+      e.target.src = '/default-avatar.svg';
+    }
   };
 
   return (
@@ -140,10 +146,10 @@ function App() {
                 <div key={message.id} className="message-item">
                   <div className="message-header">
                     <img 
-                      src={message.avatar_url || '/default-avatar.png'} 
+                      src={message.avatar_url || '/default-avatar.svg'} 
                       alt={message.username}
                       className="avatar"
-                      onError={(e) => {e.target.src = '/default-avatar.png'}}
+                      onError={handleImageError}
                     />
                     <span className="username">{message.username}</span>
                     <span className="timestamp">{formatDate(message.created_at)}</span>
@@ -179,10 +185,10 @@ function App() {
                 <div key={message.id} className="message-item">
                   <div className="message-header">
                     <img 
-                      src={message.avatar_url || '/default-avatar.png'} 
+                      src={message.avatar_url || '/default-avatar.svg'} 
                       alt={message.username}
                       className="avatar"
-                      onError={(e) => {e.target.src = '/default-avatar.png'}}
+                      onError={handleImageError}
                     />
                     <span className="username">{message.username}</span>
                     <span className="timestamp">{formatDate(message.created_at)}</span>

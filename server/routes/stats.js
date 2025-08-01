@@ -16,12 +16,12 @@ router.get('/', async (req, res) => {
 
         // 첨부파일이 있는 메시지 수
         const [messagesWithAttachmentsResult] = await req.db.execute(
-            'SELECT COUNT(*) as total FROM messages WHERE attachment_url IS NOT NULL'
+            'SELECT COUNT(*) as total FROM messages WHERE attachments IS NOT NULL'
         );
 
         // 텍스트만 있는 메시지 수
         const [textOnlyMessagesResult] = await req.db.execute(
-            'SELECT COUNT(*) as total FROM messages WHERE message IS NOT NULL AND message != "" AND attachment_url IS NULL'
+            'SELECT COUNT(*) as total FROM messages WHERE content IS NOT NULL AND content != "" AND attachments IS NULL'
         );
 
         // 오늘 메시지 수
@@ -90,8 +90,8 @@ router.get('/users', async (req, res) => {
                 u.username,
                 u.avatar_url,
                 COUNT(m.id) as message_count,
-                COUNT(CASE WHEN m.attachment_url IS NOT NULL THEN 1 END) as attachment_count,
-                COUNT(CASE WHEN m.message IS NOT NULL AND m.message != '' THEN 1 END) as text_count,
+                COUNT(CASE WHEN m.attachments IS NOT NULL THEN 1 END) as attachment_count,
+                COUNT(CASE WHEN m.content IS NOT NULL AND m.content != '' THEN 1 END) as text_count,
                 MAX(m.created_at) as last_message_at,
                 MIN(m.created_at) as first_message_at
             FROM users u
@@ -99,10 +99,10 @@ router.get('/users', async (req, res) => {
             GROUP BY u.id, u.username, u.avatar_url
             HAVING message_count > 0
             ORDER BY message_count DESC
-            LIMIT ?
+            LIMIT ${actualLimit}
         `;
 
-        const [users] = await req.db.execute(query, [actualLimit]);
+        const [users] = await req.db.execute(query);
 
         res.json({
             success: true,
@@ -132,7 +132,7 @@ router.get('/daily', async (req, res) => {
                 DATE(created_at) as date,
                 COUNT(*) as message_count,
                 COUNT(DISTINCT user_id) as active_users,
-                COUNT(CASE WHEN attachment_url IS NOT NULL THEN 1 END) as attachment_count
+                COUNT(CASE WHEN attachments IS NOT NULL THEN 1 END) as attachment_count
             FROM messages
             WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
             GROUP BY DATE(created_at)
@@ -212,11 +212,11 @@ router.get('/user/:userId', async (req, res) => {
                 u.avatar_url,
                 u.created_at as joined_at,
                 COUNT(m.id) as total_messages,
-                COUNT(CASE WHEN m.attachment_url IS NOT NULL THEN 1 END) as attachment_count,
-                COUNT(CASE WHEN m.message IS NOT NULL AND m.message != '' THEN 1 END) as text_count,
+                COUNT(CASE WHEN m.attachments IS NOT NULL THEN 1 END) as attachment_count,
+                COUNT(CASE WHEN m.content IS NOT NULL AND m.content != '' THEN 1 END) as text_count,
                 MAX(m.created_at) as last_message_at,
                 MIN(m.created_at) as first_message_at,
-                AVG(CHAR_LENGTH(m.message)) as avg_message_length
+                AVG(CHAR_LENGTH(m.content)) as avg_message_length
             FROM users u
             LEFT JOIN messages m ON u.id = m.user_id
             WHERE u.id = ?
