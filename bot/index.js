@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Client, Collection, GatewayIntentBits, Events } = require('discord.js');
+const voiceTranscriber = require('./utils/voiceTranscriber');
 require('dotenv').config();
 
 // Discord 클라이언트 초기화
@@ -9,8 +10,11 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
+
+voiceTranscriber.setClient(client);
 
 // 명령어와 이벤트 로드
 client.commands = new Collection();
