@@ -13,6 +13,7 @@ const usersRouter = require('./routes/users');
 const leaderboardRouter = require('./routes/leaderboard');
 const creditRulesRouter = require('./routes/creditRules');
 const creditReactionsRouter = require('./routes/creditReactions');
+const sttRouter = require('./routes/stt');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -54,6 +55,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/credit-rules', creditRulesRouter);
 app.use('/api/credit-reactions', creditReactionsRouter);
+app.use('/api/stt', sttRouter);
 
 // 기본 라우트
 app.get('/', (req, res) => {
@@ -69,7 +71,8 @@ app.get('/', (req, res) => {
             '/api/users',
             '/api/leaderboard',
             '/api/credit-rules',
-            '/api/credit-reactions'
+            '/api/credit-reactions',
+            '/api/stt'
         ]
     });
 });
